@@ -1,0 +1,19 @@
+# 1.The client takes a string from the command line and sends it to the server. The server sends back the number of spaces.
+
+import socket
+import struct
+
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect(("127.0.0.1", 1234))
+
+data = input("Sir de caractere: ")
+
+s.send(data.encode())
+
+res = s.recv(2)
+res = struct.unpack("!H", res)
+
+print("Numarul de spatii este: " + str(res[0]))
+
+s.close()

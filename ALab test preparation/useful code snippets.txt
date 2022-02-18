@@ -1,0 +1,53 @@
+------------- error library must be included in windows in the main function
+
+#ifdef WIN32
+       WSADATA wsaData;
+       if (WSAStartup(MAKEWORD(2, 2), &wsaData) < 0) {
+              printf("Error initializing the Windows Sockets LIbrary");
+              return -1;
+       }
+
+#endif
+
+
+------------- includes that work both in Windows and Linux
+
+
+#include <stdio.h>
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <string.h>
+#include <arpa/inet.h>
+
+#include <unistd.h>
+#include <errno.h>
+
+#define closesocket close
+typedef int SOCKET;
+#else
+
+#include<WinSock2.h>
+#include <stdint.h>
+
+#endif
+
+
+--------------- to be included in the cmake list
+
+link_libraries(ws2_32 wsock32)
+
+
+--------------- to get rid of the "address already in use" error, insert inside the server,
+after the creation of the socket:
+
+	int enable = 1;
+        setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&enable, sizeof(int));
+
+-------------- in C, we always use uint_16,
+	       don't forget to use htons, ntohs
+	       %hu is the format for scanf, printf
+
+

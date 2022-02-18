@@ -1,0 +1,62 @@
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#define closesocket close
+
+
+#define MYPORT 9009    // the port users will be connecting to
+
+int main()
+{
+    int sock;
+    sock = socket(AF_INET,SOCK_DGRAM,0);
+
+    int broadcast = 1;
+
+//     This option is needed on the socket in order to be able to receive broadcast messages
+//   If not set the receiver will not receive broadcast messages in the local network.
+    if(setsockopt(sock,SOL_SOCKET,SO_BROADCAST, &broadcast, (socklen_t)sizeof(broadcast)) < 0)
+    {
+        perror("broadcast");
+        closesocket(sock);
+        return 0;
+    }
+
+    struct sockaddr_in receiver_address;
+    struct sockaddr_in sender_address;
+
+    int len = sizeof(struct sockaddr_in);
+
+    char received_buffer[50];
+    int received_buffer_length = 50;
+    char sendMSG[]= "Broadcast message from receiver";
+
+    receiver_address.sin_family       = AF_INET;
+    receiver_address.sin_port         = htons(MYPORT);
+    receiver_address.sin_addr.s_addr  = INADDR_ANY;
+
+    if (bind(sock, (sockaddr*)&receiver_address, sizeof (receiver_address)) < 0)
+    {
+        perror("Error on bind");
+        closesocket(sock);
+        return 0;
+    }
+
+    recvfrom(sock, received_buffer, received_buffer_length, 0, (sockaddr *)&sender_address, (socklen_t*)&len);
+
+    printf("Received Message is: %s\n", received_buffer);
+
+    if(sendto(sock, sendMSG,strlen(sendMSG)+1, 0, (sockaddr *)&sender_address, sizeof(sender_address)) < 0)
+    {
+        perror("error on send");
+        closesocket(sock);
+        return 0;
+    }
+    else
+        printf("Sent the broadcast message successfully: %s\n", sendMSG);
+
+    closesocket(sock);
+}
